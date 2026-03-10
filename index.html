@@ -459,7 +459,10 @@ function blkMap(date){
 function canFit(date,start,totalDur){
   var dh=dayHrs(date);
   if(!dh||!dh.open) return false;
-  if(toMin(start)+totalDur*60 > toMin(dh.end)+30) return false;
+  // O horário de início deve estar dentro do expediente
+  if(toMin(start) > toMin(dh.end)) return false;
+  // O término não pode ultrapassar o fechamento
+  if(toMin(start)+totalDur*60 > toMin(dh.end)+60) return false;
   var bm=busyMap(date), bk=blkMap(date);
   for(var i=0;i<totalDur*2;i++){
     var sl=fmMin(toMin(start)+i*30);
