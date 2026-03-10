@@ -347,16 +347,7 @@ function saveB(){ localStorage.setItem('mp_blocks', JSON.stringify(blocks)); }
 function saveH(){ localStorage.setItem('mp_hrs',    JSON.stringify(hrs)); }
 function getPwd(){ return localStorage.getItem('mp_pwd') || DEFAULT_PWD; }
 
-// demo
-if (!appts.length) {
-  var td = tday(), tm = offDay(1);
-  appts = [
-    {id:1001,name:'Maria Clara',   phone:'11987654321',svcs:['man','ped'],date:td, time:'09:00',status:'confirmed',notes:''},
-    {id:1002,name:'Juliana Moura', phone:'11912345678',svcs:['gel2'],     date:td, time:'14:00',status:'confirmed',notes:'Formato amendoado'},
-    {id:1003,name:'Fernanda Lima', phone:'11965432109',svcs:['spa'],      date:tm, time:'10:00',status:'pending',  notes:''}
-  ];
-  saveA();
-}
+
 
 // ═══ HELPERS ══════════════════════════
 function tday(){ return new Date().toISOString().split('T')[0]; }
