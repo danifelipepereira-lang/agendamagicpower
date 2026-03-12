@@ -530,11 +530,13 @@ function blkMap(date){
 function canFit(date,start,totalDur){
   var dh=dayHrs(date);
   if(!dh||!dh.open) return false;
-  // O início deve estar dentro do expediente (pode terminar depois do fechamento)
-  if(toMin(start) > toMin(dh.end)) return false;
+  var startMin = toMin(start);
+  // Início deve estar dentro do expediente
+  if(startMin < toMin(dh.start)) return false;
+  if(startMin > toMin(dh.end)) return false;
   var bm=busyMap(date), bk=blkMap(date);
   for(var i=0;i<totalDur*2;i++){
-    var sl=fmMin(toMin(start)+i*30);
+    var sl=fmMin(startMin+i*30);
     if(bm[sl]||bk[sl]) return false;
   }
   return true;
