@@ -310,7 +310,7 @@ tbody td strong{color:var(--ink);font-weight:500}
 var SALON_PHONE = '5511992417516';
 var SALON_NAME  = 'Magic Power';
 var DEFAULT_PWD = 'magicpower2024';
-var SHEETS_URL  = 'https://script.google.com/macros/s/AKfycbyS_B0Z2byZ-BNOudjp_f_2jkOTpli2Hd8Hb1BhSjYr6Bmpu8-VIQdvwPHQI1QEyv0/exec';
+var SHEETS_URL  = 'https://script.google.com/macros/s/AKfycbzPFK8Om8Ev8MZoSK2TnWJvbItTYiMvaJLf5H9pwZEUSxZ5w0_EzI4PjUgX8kQICGoj/exec';
 var SVCS = [
   {id:'man',  name:'Manicure Simples',   dur:1, price:35,  prefix:''},
   {id:'ped',  name:'Pedicure Simples',   dur:1, price:40,  prefix:''},
@@ -387,6 +387,11 @@ function loadFromSheets(callback){
         localStorage.setItem('mp_appts', JSON.stringify(appts));
         if(logged){ renderTable(); renderStats(); renderMiniCal(); }
       }
+      if(d.blocks){
+        blocks = d.blocks;
+        localStorage.setItem('mp_blocks', JSON.stringify(blocks));
+        if(logged && document.getElementById('p-blocks').classList.contains('on')) renderBlockList();
+      }
       if(callback) callback();
     })
     .catch(function(){
@@ -413,7 +418,12 @@ function updateSheets(id, status){
   var url = SHEETS_URL + '?action=update&id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent(status);
   fetch(url).catch(function(){});
 }
-function saveB(){ localStorage.setItem('mp_blocks', JSON.stringify(blocks)); }
+function saveB(){
+  localStorage.setItem('mp_blocks', JSON.stringify(blocks));
+  // Sincroniza bloqueios com Sheets
+  var url = SHEETS_URL + '?action=setBlocks&blocks=' + encodeURIComponent(JSON.stringify(blocks));
+  fetch(url).catch(function(){});
+}
 function saveH(){ localStorage.setItem('mp_hrs',    JSON.stringify(hrs)); }
 function getPwd(){ return localStorage.getItem('mp_pwd') || DEFAULT_PWD; }
 
