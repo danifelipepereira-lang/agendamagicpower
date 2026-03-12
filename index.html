@@ -307,9 +307,10 @@ tbody td strong{color:var(--ink);font-weight:500}
 
 <script>
 // ═══ CONFIG ═══════════════════════════
-var SALON_PHONE = '5511999999999';
+var SALON_PHONE = '5511992417516';
 var SALON_NAME  = 'Magic Power';
 var DEFAULT_PWD = 'magicpower2024';
+var SHEETS_URL  = 'https://script.google.com/macros/s/AKfycbyS_B0Z2byZ-BNOudjp_f_2jkOTpli2Hd8Hb1BhSjYr6Bmpu8-VIQdvwPHQI1QEyv0/exec';
 var SVCS = [
   {id:'man',  name:'Manicure Simples',   dur:1, price:35,  prefix:''},
   {id:'ped',  name:'Pedicure Simples',   dur:1, price:40,  prefix:''},
@@ -336,13 +337,82 @@ var calDt    = new Date();
 var admFlt   = 'all';
 var pendingWA = null;
 
-var appts  = JSON.parse(localStorage.getItem('mp_appts')  || '[]');
+var appts  = [];
 var notifs = JSON.parse(localStorage.getItem('mp_notifs') || '[]');
 var blocks = JSON.parse(localStorage.getItem('mp_blocks') || '[]');
 var hrs    = JSON.parse(localStorage.getItem('mp_hrs')    || 'null') || clone(DEFAULT_HRS);
 
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
-function saveA(){ localStorage.setItem('mp_appts',  JSON.stringify(appts)); }
+function saveA(){ localStorage.setItem('mp_appts', JSON.stringify(appts)); }
+function pushToSheets(appt){
+  fetch(SHEETS_URL, {method:'POST', body:JSON.stringify({action:'add', appt:appt})}).catch(function(){});
+}
+function updateSheets(id, status){
+  fetch(SHEETS_URL, {method:'POST', body:JSON.stringify({action:'update', id:id, status:status})}).catch(function(){});
+}
+var CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTVe4u8Q073PnUn3A-8hf_KbumjdIcaXZCzF58QkDp0pRPENu2Dk4dcdIGw-b5EzJr1e7yaXXMAt-mQ/pub?gid=0&single=true&output=csv';
+function loadFromSheets(callback){
+  var url = SHEETS_URL + '?action=getAll&t=' + Date.now();
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok && d.data){
+        appts = d.data.map(function(a){
+          // Corrige data: extrai yyyy-MM-dd de qualquer formato
+          var dateStr = String(a.date);
+          if(dateStr.indexOf('GMT') >= 0){
+            // Extrai ano, mês, dia do timestamp
+            var d2 = new Date(dateStr);
+            if(!isNaN(d2)){
+              // Usa UTC+0 pois a data já vem com offset -03:00
+              var utcY = d2.getUTCFullYear();
+              var utcM = d2.getUTCMonth();
+              var utcD = d2.getUTCDate();
+              // Ajusta para horário de Brasília (UTC-3)
+              var brtMs = d2.getTime() + (3 * 3600000);
+              var brtD = new Date(brtMs);
+              dateStr = brtD.getUTCFullYear()+'-'+('0'+(brtD.getUTCMonth()+1)).slice(-2)+'-'+('0'+brtD.getUTCDate()).slice(-2);
+            }
+          }
+          // Corrige hora: extrai HH:mm de "Sat Dec 30 1899 09:00:00 GMT-0306..."
+          var timeStr = String(a.time);
+          if(timeStr.indexOf('GMT') >= 0){
+            // Extrai HH:MM diretamente com regex
+            var tm = timeStr.match(/(\d{2}):(\d{2}):\d{2}\s+GMT/);
+            if(tm) timeStr = tm[1]+':'+tm[2];
+          }
+          return {id:a.id, name:a.name, phone:a.phone, svcs:a.svcs,
+                  date:dateStr, time:timeStr, status:a.status, notes:a.notes||''};
+        });
+        localStorage.setItem('mp_appts', JSON.stringify(appts));
+        if(logged){ renderTable(); renderStats(); renderMiniCal(); }
+      }
+      if(callback) callback();
+    })
+    .catch(function(){
+      appts = JSON.parse(localStorage.getItem('mp_appts') || '[]');
+      if(callback) callback();
+    });
+}
+function parseCSVLine(line){
+  var result=[], cur='', inQ=false;
+  for(var i=0;i<line.length;i++){
+    var c=line[i];
+    if(c==='"'){ inQ=!inQ; }
+    else if(c===','&&!inQ){ result.push(cur.trim()); cur=''; }
+    else { cur+=c; }
+  }
+  result.push(cur.trim());
+  return result;
+}
+function pushToSheets(appt){
+  var url = SHEETS_URL + '?action=add&appt=' + encodeURIComponent(JSON.stringify(appt));
+  fetch(url).catch(function(){});
+}
+function updateSheets(id, status){
+  var url = SHEETS_URL + '?action=update&id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent(status);
+  fetch(url).catch(function(){});
+}
 function saveB(){ localStorage.setItem('mp_blocks', JSON.stringify(blocks)); }
 function saveH(){ localStorage.setItem('mp_hrs',    JSON.stringify(hrs)); }
 function getPwd(){ return localStorage.getItem('mp_pwd') || DEFAULT_PWD; }
@@ -450,10 +520,8 @@ function blkMap(date){
 function canFit(date,start,totalDur){
   var dh=dayHrs(date);
   if(!dh||!dh.open) return false;
-  // O horário de início deve estar dentro do expediente
+  // O início deve estar dentro do expediente (pode terminar depois do fechamento)
   if(toMin(start) > toMin(dh.end)) return false;
-  // O término não pode ultrapassar o fechamento
-  if(toMin(start)+totalDur*60 > toMin(dh.end)+60) return false;
   var bm=busyMap(date), bk=blkMap(date);
   for(var i=0;i<totalDur*2;i++){
     var sl=fmMin(toMin(start)+i*30);
@@ -466,6 +534,10 @@ function buildSlots(){
   var date = document.getElementById('c-date').value;
   var area = document.getElementById('slots-area');
   selTime  = null;
+  area.innerHTML = '<div class="slot-hint">Buscando horários disponíveis...</div>';
+  loadFromSheets(function(){ renderSlots(date, area); });
+}
+function renderSlots(date, area){
   if(!date||!sel.length){
     area.innerHTML='<div class="slot-hint">Selecione procedimento e data primeiro.</div>';
     return;
@@ -519,11 +591,19 @@ function doBook(){
   if(!selTime)       { alert('Selecione um horário.'); return; }
   var totalDur=0;
   for(var i=0;i<sel.length;i++){ var s=getSvc(sel[i]); if(s) totalDur+=s.dur; }
-  if(!canFit(date,selTime,totalDur)){ alert('Horário indisponível. Escolha outro.'); buildSlots(); return; }
-  var appt = {id:Date.now(),name:name,phone:rawph,svcs:sel.slice(),date:date,time:selTime,status:'confirmed',notes:notes};
-  appts.push(appt); saveA();
-  showConf(appt);
-  resetForm();
+  var savedName=name, savedPhone=rawph, savedDate=date, savedNotes=notes, savedSel=sel.slice(), savedTime=selTime;
+  // Recarrega dados frescos antes de confirmar para evitar conflito
+  loadFromSheets(function(){
+    if(!canFit(savedDate, savedTime, totalDur)){
+      alert('Este horário acabou de ser reservado. Por favor escolha outro horário.');
+      buildSlots();
+      return;
+    }
+    var appt = {id:Date.now(),name:savedName,phone:savedPhone,svcs:savedSel,date:savedDate,time:savedTime,status:'confirmed',notes:savedNotes};
+    appts.push(appt); saveA(); pushToSheets(appt);
+    showConf(appt);
+    resetForm();
+  });
 }
 
 function resetForm(){
@@ -551,7 +631,7 @@ function showConf(appt){
     '<div class="conf-row"><span class="k">Data</span><span class="v">'+fmtDt(appt.date)+'</span></div>'+
     '<div class="conf-row"><span class="k">Horário</span><span class="v">'+appt.time+' – '+endT+'</span></div>'+
     '<div class="conf-row"><span class="k">Total</span><span class="v">R$ '+total+'</span></div>';
-  var msg='Olá! 🦋 Agendamento no *'+SALON_NAME+'*\n\n👤 *'+appt.name+'*\n💅 '+names+'\n📅 '+fmtDt(appt.date)+' às '+appt.time+'\n💰 R$ '+total+'\n\n✅ Confirmo minha presença!';
+  var msg='Oi Carol! Sou a *'+appt.name+'* e acabei de agendar pelo site!\n\n*Procedimentos:* '+names+'\n*Data:* '+fmtDt(appt.date)+'\n*Horário:* '+appt.time+'\n*Total:* R$ '+total+'\n\nEstarei lá!';
   pendingWA = 'https://wa.me/'+SALON_PHONE+'?text='+encodeURIComponent(msg);
   document.getElementById('modal-conf').classList.add('on');
 }
@@ -655,8 +735,8 @@ function renderStats(){
   var sub=document.getElementById('adm-sub');
   if(sub){ var d=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}); sub.textContent=d+' · '+todL.length+' agendamento'+(todL.length!==1?'s':'')+' hoje'; }
 }
-function confAppt(id){ var a=appts.filter(function(x){return x.id===id;})[0]; if(!a)return; a.status='confirmed'; saveA();renderTable();renderStats(); }
-function cancelAppt(id){ var a=appts.filter(function(x){return x.id===id;})[0]; if(!a)return; if(!confirm('Cancelar agendamento de '+a.name+'?'))return; a.status='cancelled'; saveA();renderTable();renderStats();renderMiniCal(); }
+function confAppt(id){ var a=appts.filter(function(x){return x.id===id;})[0]; if(!a)return; a.status='confirmed'; saveA(); updateSheets(id,'confirmed'); renderTable();renderStats(); }
+function cancelAppt(id){ var a=appts.filter(function(x){return x.id===id;})[0]; if(!a)return; if(!confirm('Cancelar agendamento de '+a.name+'?'))return; a.status='cancelled'; saveA(); updateSheets(id,'cancelled'); renderTable();renderStats();renderMiniCal(); }
 function manRemind(id){
   var a=appts.filter(function(x){return x.id===id;})[0]; if(!a)return;
   var msg='Olá *'+a.name+'*! 🦋 Lembrete do *'+SALON_NAME+'*:\n📅 '+fmtDt(a.date)+' às *'+a.time+'*\n💅 '+apptNames(a)+'\n\nTe esperamos! ✨';
@@ -775,6 +855,7 @@ function togglePanel(id){
 
 // ═══ BIND TUDO NO DOMContentLoaded ════
 document.addEventListener('DOMContentLoaded', function(){
+  loadFromSheets();
   document.getElementById('c-date').min = tday();
 
   // Tabs nav
