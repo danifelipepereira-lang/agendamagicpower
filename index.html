@@ -727,7 +727,7 @@ function showConf(appt){
     '<div class="conf-row"><span class="k">Data</span><span class="v">'+fmtDt(appt.date)+'</span></div>'+
     '<div class="conf-row"><span class="k">Horário</span><span class="v">'+appt.time+' – '+endT+'</span></div>'+
     '';
-  var msg='Oi Carol! Sou a *'+appt.name+'* e acabei de agendar pelo site!\n\n*Procedimentos:* '+names+'\n*Data:* '+fmtDt(appt.date)+'\n*Horário:* '+appt.time+'\n*Total:* R$ '+total+'\n\nEstarei lá!';
+  var msg='Oi Carol! Sou a *'+appt.name+'* e acabei de agendar pelo site!\n\n*Procedimentos:* '+names+'\n*Data:* '+fmtDt(appt.date)+'\n*Horário:* '+appt.time+'\n\nEstarei lá!';
   pendingWA = 'https://wa.me/'+SALON_PHONE+'?text='+encodeURIComponent(msg);
   document.getElementById('modal-conf').classList.add('on');
 }
