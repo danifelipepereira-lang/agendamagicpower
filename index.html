@@ -153,6 +153,40 @@ tbody td strong{color:var(--ink);font-weight:500}
 .link-sm{margin-top:1.25rem;font-size:.78rem;color:var(--ink-muted);text-decoration:underline;display:inline-block;cursor:pointer}
 @media(max-width:900px){.adm-wrap{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--cream-dark)}.bk-form{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.frow{grid-template-columns:1fr}.card{padding:1.25rem}.adm-main{padding:1rem}.hero h1{font-size:2rem}.bk-form{grid-template-columns:1fr}.hrs-grid{grid-template-columns:1fr}.adm-hdr-right{width:100%}.search-box{width:100%}}
+
+/* ═══ FINANCEIRO ══════════════════════ */
+.fin-section{margin-bottom:1.5rem;}
+.fin-title{font-size:.75rem;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.75rem;}
+.fin-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem;}
+.fin-card{background:var(--cream-mid);border-radius:var(--r-sm);padding:1rem;text-align:center;}
+.fin-card.green{background:#e8f5e9;}
+.fin-card.red{background:#fce4e4;}
+.fin-card.blue{background:#e3f0fb;}
+.fin-card .fc-label{font-size:.68rem;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.35rem;}
+.fin-card .fc-val{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--ink);}
+.fin-month-nav{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;}
+.fin-month-nav button{background:none;border:1.5px solid var(--cream-dark);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+.fin-month-nav span{font-size:.95rem;font-weight:500;flex:1;text-align:center;}
+.fin-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.fin-table th{font-size:.67rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-muted);padding:.5rem .6rem;border-bottom:1.5px solid var(--cream-dark);text-align:left;}
+.fin-table td{padding:.55rem .6rem;border-bottom:1px solid var(--cream-mid);vertical-align:middle;}
+.fin-table .val-in{color:#2e7d32;font-family:'Cormorant Garamond',serif;font-size:1rem;}
+.fin-table .val-out{color:#c62828;font-family:'Cormorant Garamond',serif;font-size:1rem;}
+.fin-edit-val{width:90px;padding:.3rem .5rem;border:1.5px solid var(--cream-dark);border-radius:6px;font-size:.85rem;font-family:'Jost',sans-serif;background:var(--cream-mid);}
+.exp-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.5rem;align-items:end;margin-bottom:1rem;}
+.exp-form input, .exp-form select{padding:.6rem .8rem;border:1.5px solid var(--cream-dark);border-radius:var(--r-sm);font-size:.85rem;font-family:'Jost',sans-serif;background:var(--cream-mid);color:var(--ink);}
+.exp-form label{font-size:.66rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-muted);display:block;margin-bottom:.3rem;}
+.rent-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;}
+.rent-row label{font-size:.78rem;color:var(--ink-muted);white-space:nowrap;}
+.rent-row input{width:120px;padding:.5rem .75rem;border:1.5px solid var(--cream-dark);border-radius:var(--r-sm);font-size:.9rem;font-family:'Jost',sans-serif;background:var(--cream-mid);}
+.badge-exp{display:inline-block;padding:.2rem .5rem;border-radius:20px;font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;}
+.badge-mat{background:#fff3e0;color:#e65100;}
+.badge-alg{background:#f3e5f5;color:#6a1b9a;}
+.badge-out{background:#e8eaf6;color:#283593;}
+@media(max-width:600px){
+  .fin-cards{grid-template-columns:1fr 1fr;}
+  .exp-form{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
@@ -245,6 +279,7 @@ tbody td strong{color:var(--ink);font-weight:500}
           <input class="search-box" id="adm-search" placeholder="Buscar cliente...">
           <button class="btn-sm" id="btn-p-hours">⚙️ Horários</button>
           <button class="btn-sm" id="btn-p-blocks">🚫 Bloqueios</button>
+          <button class="btn-sm" id="btn-p-fin">💰 Financeiro</button>
           <button class="btn-logout" id="btn-logout">Sair</button>
         </div>
       </div>
@@ -264,6 +299,55 @@ tbody td strong{color:var(--ink);font-weight:500}
         </div>
         <div class="bk-list" id="bk-list"></div>
       </div>
+
+      <div class="panel" id="p-fin">
+        <div class="panel-title">💰 Controle Financeiro</div>
+
+        <!-- Navegação de mês -->
+        <div class="fin-month-nav">
+          <button id="fin-prev">‹</button>
+          <span id="fin-month-label"></span>
+          <button id="fin-next">›</button>
+        </div>
+
+        <!-- Cards resumo -->
+        <div class="fin-cards">
+          <div class="fin-card green"><div class="fc-label">Entradas</div><div class="fc-val" id="fc-in">R$ 0</div></div>
+          <div class="fin-card red"><div class="fc-label">Saídas</div><div class="fc-val" id="fc-out">R$ 0</div></div>
+          <div class="fin-card blue"><div class="fc-label">Saldo</div><div class="fc-val" id="fc-bal">R$ 0</div></div>
+        </div>
+
+        <!-- Entradas -->
+        <div class="fin-section">
+          <div class="fin-title">📥 Entradas do mês</div>
+          <table class="fin-table">
+            <thead><tr><th>Data</th><th>Cliente</th><th>Procedimentos</th><th>Valor</th></tr></thead>
+            <tbody id="fin-in-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Despesas -->
+        <div class="fin-section">
+          <div class="fin-title">📤 Despesas</div>
+          <div class="rent-row">
+            <label>🏠 Aluguel mensal (parte do salão):</label>
+            <input type="number" id="fin-rent" placeholder="Ex: 450" min="0">
+            <button class="btn-sm" id="btn-save-rent">Salvar</button>
+          </div>
+          <div class="exp-form">
+            <div><label>Categoria</label><select id="exp-cat"><option value="mat">Material</option><option value="alg">Aluguel extra</option><option value="out">Outros</option></select></div>
+            <div><label>Descrição</label><input type="text" id="exp-desc" placeholder="Ex: Esmaltes"></div>
+            <div><label>Valor total (R$)</label><input type="number" id="exp-val" placeholder="0,00" min="0" step="0.01"></div>
+            <div><label>Parcelas</label><select id="exp-inst"><option value="1">À vista</option><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="5">5x</option><option value="6">6x</option><option value="12">12x</option></select></div>
+            <div><label>&nbsp;</label><button class="btn-add" id="btn-add-exp">+ Adicionar</button></div>
+          </div>
+          <table class="fin-table">
+            <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
+            <tbody id="fin-out-body"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="stats" id="stats"></div>
       <div class="filters">
         <button class="fbtn on" data-f="all">Todos</button>
@@ -921,6 +1005,22 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('btn-p-blocks').addEventListener('click', function(){ togglePanel('p-blocks'); });
   document.getElementById('btn-save-hrs').addEventListener('click', saveHours);
   document.getElementById('btn-add-block').addEventListener('click', addBlock);
+  document.getElementById('btn-p-fin').addEventListener('click', function(){
+    togglePanel('p-fin');
+    if(document.getElementById('p-fin').classList.contains('on')) renderFin();
+  });
+  document.getElementById('fin-prev').addEventListener('click', function(){
+    finMonth--; if(finMonth<0){finMonth=11;finYear--;} renderFin();
+  });
+  document.getElementById('fin-next').addEventListener('click', function(){
+    finMonth++; if(finMonth>11){finMonth=0;finYear++;} renderFin();
+  });
+  document.getElementById('btn-add-exp').addEventListener('click', addExpense);
+  document.getElementById('btn-save-rent').addEventListener('click', function(){
+    finRent = parseFloat(document.getElementById('fin-rent').value) || 0;
+    localStorage.setItem('mp_rent', finRent);
+    renderFin();
+  });
   document.getElementById('adm-search').addEventListener('input', renderTable);
 
   // Filtros
@@ -936,6 +1036,164 @@ document.addEventListener('DOMContentLoaded', function(){
     })(fbtns[f]);
   }
 });
+
+// ═══ FINANCEIRO ═══════════════════════
+var finMonth = new Date().getMonth();
+var finYear  = new Date().getFullYear();
+var expenses = JSON.parse(localStorage.getItem('mp_expenses') || '[]');
+var finRent  = parseFloat(localStorage.getItem('mp_rent') || '0');
+// income overrides: {apptId: value}
+var incomeOvr = JSON.parse(localStorage.getItem('mp_income_ovr') || '{}');
+
+var MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function saveExpenses(){ localStorage.setItem('mp_expenses', JSON.stringify(expenses)); }
+function saveIncomeOvr(){ localStorage.setItem('mp_income_ovr', JSON.stringify(incomeOvr)); }
+
+function apptDefaultPrice(a){
+  var t=0;
+  for(var i=0;i<a.svcs.length;i++){
+    var s=getSvc(a.svcs[i]);
+    if(s) t += s.price;
+  }
+  return t;
+}
+
+function apptFinVal(a){
+  return incomeOvr[a.id] !== undefined ? parseFloat(incomeOvr[a.id]) : apptDefaultPrice(a);
+}
+
+function finMonthStr(y,m){ return y+'-'+('0'+(m+1)).slice(-2); }
+
+function renderFin(){
+  var ms = finMonthStr(finYear, finMonth);
+  document.getElementById('fin-month-label').textContent = MONTHS_PT[finMonth] + ' ' + finYear;
+  document.getElementById('fin-rent').value = finRent || '';
+
+  // Entradas: agendamentos confirmados do mês
+  var inList = appts.filter(function(a){
+    return a.status === 'confirmed' && a.date && a.date.slice(0,7) === ms;
+  });
+  var inTotal = 0;
+  var inHtml = '';
+  for(var i=0;i<inList.length;i++){
+    var a = inList[i];
+    var val = apptFinVal(a);
+    var isGel2 = a.svcs.indexOf('gel2') >= 0;
+    inTotal += val;
+    inHtml += '<tr>'+
+      '<td>'+fmtDt(a.date)+'</td>'+
+      '<td>'+a.name+'</td>'+
+      '<td style="font-size:.78rem">'+apptNames(a)+'</td>'+
+      '<td><input class="fin-edit-val" type="number" value="'+val+'" min="0" step="0.01" data-appt-id="'+a.id+'"'+(isGel2?' style="border-color:#c084fc"':'')+' title="'+(isGel2?'Alongamento em Gel — confirme o valor real':'Edite se necessário')+'"></td>'+
+      '</tr>';
+  }
+  if(!inHtml) inHtml = '<tr><td colspan="4" style="color:var(--ink-muted);text-align:center;padding:1rem">Nenhuma entrada neste mês</td></tr>';
+  document.getElementById('fin-in-body').innerHTML = inHtml;
+
+  // Bind value edits
+  var inputs = document.getElementById('fin-in-body').querySelectorAll('.fin-edit-val');
+  for(var k=0;k<inputs.length;k++){
+    (function(inp){
+      inp.addEventListener('change', function(){
+        var id = inp.getAttribute('data-appt-id');
+        incomeOvr[id] = parseFloat(inp.value) || 0;
+        saveIncomeOvr();
+        renderFinSummary();
+      });
+    })(inputs[k]);
+  }
+
+  // Saídas do mês (incluindo parcelas)
+  var outTotal = 0;
+  var outHtml = '';
+  // Aluguel fixo
+  if(finRent > 0){
+    outTotal += finRent;
+    outHtml += '<tr><td>—</td><td>Aluguel</td><td><span class="badge-exp badge-alg">Aluguel</span></td><td class="val-out">R$ '+finRent.toFixed(2)+'</td><td></td></tr>';
+  }
+  for(var j=0;j<expenses.length;j++){
+    var ex = expenses[j];
+    // Check if any installment falls in this month
+    for(var p=0;p<ex.inst;p++){
+      var d = new Date(ex.date+'T12:00:00');
+      d.setMonth(d.getMonth()+p);
+      var exMs = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
+      if(exMs === ms){
+        var parVal = ex.total / ex.inst;
+        outTotal += parVal;
+        var catLabel = ex.cat==='mat'?'Material':ex.cat==='alg'?'Aluguel extra':'Outros';
+        var catBadge = 'badge-'+ex.cat;
+        var parLabel = ex.inst>1 ? ' ('+( p+1)+'/'+ex.inst+'x)':'';
+        outHtml += '<tr>'+
+          '<td>'+fmtDt(ex.date)+'</td>'+
+          '<td>'+ex.desc+parLabel+'</td>'+
+          '<td><span class="badge-exp '+catBadge+'">'+catLabel+'</span></td>'+
+          '<td class="val-out">R$ '+parVal.toFixed(2)+'</td>'+
+          '<td><button class="act" data-del-exp="'+ex.id+'">✕</button></td>'+
+          '</tr>';
+        break;
+      }
+    }
+  }
+  if(!outHtml) outHtml = '<tr><td colspan="5" style="color:var(--ink-muted);text-align:center;padding:1rem">Nenhuma despesa neste mês</td></tr>';
+  document.getElementById('fin-out-body').innerHTML = outHtml;
+
+  // Bind delete expense
+  var delBtns = document.getElementById('fin-out-body').querySelectorAll('[data-del-exp]');
+  for(var d2=0;d2<delBtns.length;d2++){
+    (function(btn){
+      btn.addEventListener('click', function(){
+        var eid = parseInt(btn.getAttribute('data-del-exp'));
+        expenses = expenses.filter(function(e){ return e.id !== eid; });
+        saveExpenses();
+        renderFin();
+      });
+    })(delBtns[d2]);
+  }
+
+  renderFinSummary(inTotal, outTotal);
+}
+
+function renderFinSummary(inTotal, outTotal){
+  if(inTotal === undefined){
+    // recalculate
+    var ms = finMonthStr(finYear, finMonth);
+    inTotal = 0;
+    var ins = appts.filter(function(a){ return a.status==='confirmed' && a.date && a.date.slice(0,7)===ms; });
+    for(var i=0;i<ins.length;i++) inTotal += apptFinVal(ins[i]);
+    outTotal = finRent || 0;
+    for(var j=0;j<expenses.length;j++){
+      var ex=expenses[j];
+      for(var p=0;p<ex.inst;p++){
+        var d=new Date(ex.date+'T12:00:00'); d.setMonth(d.getMonth()+p);
+        var exMs=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
+        if(exMs===ms){ outTotal += ex.total/ex.inst; break; }
+      }
+    }
+  }
+  var bal = inTotal - outTotal;
+  document.getElementById('fc-in').textContent  = 'R$ '+inTotal.toFixed(2);
+  document.getElementById('fc-out').textContent = 'R$ '+outTotal.toFixed(2);
+  document.getElementById('fc-bal').textContent = 'R$ '+bal.toFixed(2);
+  document.getElementById('fc-bal').style.color = bal >= 0 ? '#2e7d32' : '#c62828';
+}
+
+function addExpense(){
+  var cat  = document.getElementById('exp-cat').value;
+  var desc = document.getElementById('exp-desc').value.trim();
+  var val  = parseFloat(document.getElementById('exp-val').value);
+  var inst = parseInt(document.getElementById('exp-inst').value);
+  if(!desc){ alert('Informe a descrição.'); return; }
+  if(!val || val <= 0){ alert('Informe o valor.'); return; }
+  var today = tday();
+  expenses.push({id: Date.now(), date: today, cat: cat, desc: desc, total: val, inst: inst});
+  saveExpenses();
+  document.getElementById('exp-desc').value = '';
+  document.getElementById('exp-val').value  = '';
+  renderFin();
+}
+
 </script>
 </body>
 </html>
