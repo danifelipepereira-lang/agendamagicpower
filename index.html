@@ -207,11 +207,11 @@ tbody td strong{color:var(--ink);font-weight:500}
         <div class="svc-label">Procedimentos <span style="color:var(--ink-faint);font-size:.68rem">(máx. 3)</span></div>
         <div class="svc-hint">👇 Toque para selecionar até 3 procedimentos</div>
         <div class="svc-list">
-          <div class="svc-item" data-id="man"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">💅 Manicure Simples</div><div class="svc-dur">⏱ 1h</div></div></div><div class="svc-price">R$ 35</div></div>
-          <div class="svc-item" data-id="ped"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">🦶 Pedicure Simples</div><div class="svc-dur">⏱ 1h</div></div></div><div class="svc-price">R$ 40</div></div>
-          <div class="svc-item" data-id="gel"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">✨ Banho de Gel</div><div class="svc-dur">⏱ 2h</div></div></div><div class="svc-price">R$ 140</div></div>
-          <div class="svc-item" data-id="gel2"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">💎 Alongamento em Gel</div><div class="svc-dur">⏱ 2h</div></div></div><div class="svc-price" style="font-size:.82rem">A partir de R$ 160</div></div>
-          <div class="svc-item" data-id="spa"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">🌸 SPA dos Pés</div><div class="svc-dur">⏱ 1h</div></div></div><div class="svc-price">R$ 110</div></div>
+          <div class="svc-item" data-id="man"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">💅 Manicure Simples</div><div class="svc-dur">⏱ 1h</div></div></div></div>
+          <div class="svc-item" data-id="ped"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">🦶 Pedicure Simples</div><div class="svc-dur">⏱ 1h</div></div></div></div>
+          <div class="svc-item" data-id="gel"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">✨ Banho de Gel</div><div class="svc-dur">⏱ 2h</div></div></div></div>
+          <div class="svc-item" data-id="gel2"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">💎 Alongamento em Gel</div><div class="svc-dur">⏱ 2h</div></div></div></div>
+          <div class="svc-item" data-id="spa"><div class="svc-left"><div class="svc-check"></div><div><div class="svc-name">🌸 SPA dos Pés</div><div class="svc-dur">⏱ 1h</div></div></div></div>
         </div>
         <div class="svc-sum" id="svc-sum"><span id="sum-names"></span><span class="sum-total" id="sum-total"></span></div>
       </div>
@@ -500,13 +500,13 @@ function toggleSvc(id){
     total += s.price; dur += s.dur;
   }
   document.getElementById('sum-names').textContent = names+' • '+dur+'h';
-  document.getElementById('sum-total').textContent = 'R$ '+total;
+  document.getElementById('sum-total').textContent = '';
 }
 
 // ═══ HORÁRIOS / SLOTS ═════════════════
 function dayHrs(ds){ var dow=new Date(ds+'T12:00:00').getDay(); return hrs[dow]; }
 function isOpen(ds){ var h=dayHrs(ds); return h&&h.open; }
-function genSlots(s,e){ var sl=[],c=toMin(s),em=toMin(e); while(c<=em){sl.push(fmMin(c));c+=30;} return sl; }
+function genSlots(s,e){ var sl=[],c=toMin(s),em=toMin(e); while(c<=em){sl.push(fmMin(c));c+=60;} return sl; }
 function busyMap(date){
   var m={};
   for(var i=0;i<appts.length;i++){
@@ -642,7 +642,7 @@ function showConf(appt){
     '<div class="conf-row"><span class="k">Procedimentos</span><span class="v">'+names+'</span></div>'+
     '<div class="conf-row"><span class="k">Data</span><span class="v">'+fmtDt(appt.date)+'</span></div>'+
     '<div class="conf-row"><span class="k">Horário</span><span class="v">'+appt.time+' – '+endT+'</span></div>'+
-    '<div class="conf-row"><span class="k">Total</span><span class="v">R$ '+total+'</span></div>';
+    '';
   var msg='Oi Carol! Sou a *'+appt.name+'* e acabei de agendar pelo site!\n\n*Procedimentos:* '+names+'\n*Data:* '+fmtDt(appt.date)+'\n*Horário:* '+appt.time+'\n*Total:* R$ '+total+'\n\nEstarei lá!';
   pendingWA = 'https://wa.me/'+SALON_PHONE+'?text='+encodeURIComponent(msg);
   document.getElementById('modal-conf').classList.add('on');
@@ -710,7 +710,7 @@ function renderTable(){
       '</td><td style="font-size:.8rem">'+names+'</td>'+
       '<td><strong>'+fmtDt(a.date)+'</strong><br><span style="font-size:.76rem;color:var(--ink-muted)">'+a.time+'–'+endT+'</span></td>'+
       '<td><span style="font-size:.76rem;color:var(--ink-muted)">⏱'+dur+'h</span></td>'+
-      '<td style="font-family:\'Cormorant Garamond\',serif;font-size:1.05rem">R$'+total+'</td>'+
+      ''+
       '<td><span class="badge '+bc+'">'+bl+'</span></td>'+
       '<td><div class="acts">'+
         '<button class="act" data-remind="'+a.id+'">📲</button>'+
